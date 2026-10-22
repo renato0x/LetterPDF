@@ -62,18 +62,20 @@ fun createA4Pdf(context: Context, pages: List<DocumentPage>): PdfExportResult {
 }
 
 fun copyPdfToDestination(context: Context, temporary: File, destination: Uri): DestinationWriteResult {
+    var saved = false
     return try {
         context.contentResolver.openOutputStream(destination)?.use { output ->
             FileInputStream(temporary).use { input -> input.copyTo(output) }
         } ?: return DestinationWriteResult.Failure("Não foi possível abrir o local escolhido.")
-        temporary.delete()
+        saved = true
         DestinationWriteResult.Saved
     } catch (_: IOException) {
-        temporary.delete()
         DestinationWriteResult.Failure("Não foi possível salvar no local escolhido.")
     } catch (_: SecurityException) {
-        temporary.delete()
         DestinationWriteResult.Failure("Sem permissão para salvar neste local.")
+    } finally {
+        temporary.delete()
+        if (!saved) runCatching { context.contentResolver.delete(destination, null, null) }
     }
 }
 

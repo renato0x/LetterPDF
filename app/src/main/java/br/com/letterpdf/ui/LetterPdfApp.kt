@@ -93,7 +93,6 @@ fun LetterPdfApp() {
     }
     var removePageId by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    var pendingExport by remember { mutableStateOf<List<DocumentPage>?>(null) }
     var savedPdf by remember { mutableStateOf<Uri?>(null) }
     var saving by remember { mutableStateOf(false) }
     var discardDraft by remember { mutableStateOf(false) }
@@ -161,9 +160,8 @@ fun LetterPdfApp() {
         }
     }
     val savePdf = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { destination ->
-        val snapshot = pendingExport
-        pendingExport = null
-        if (destination != null && snapshot != null) {
+        if (destination != null) {
+            val snapshot = pages.toList()
             saving = true
             scope.launch {
                 val failure = withContext(Dispatchers.IO) {
@@ -218,7 +216,6 @@ fun LetterPdfApp() {
                     defaultName = defaultPdfName(),
                     saving = saving,
                     onSave = { writtenName ->
-                        pendingExport = pages.toList()
                         savePdf.launch(pdfFileName(writtenName))
                     },
                     onBack = { screen = Screen.PAGES },
