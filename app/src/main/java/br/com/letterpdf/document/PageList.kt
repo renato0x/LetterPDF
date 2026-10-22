@@ -198,6 +198,10 @@ private fun PageThumbnail(page: DocumentPage) {
     val context = LocalContext.current
     var result by remember(page.source) { mutableStateOf<PageBitmapResult?>(null) }
     LaunchedEffect(page.source) { result = withContext(Dispatchers.IO) { loadUprightBitmap(context, page.source, maxSide = 256) } }
+    val latestResult by rememberUpdatedState(result)
+    DisposableEffect(page.source) {
+        onDispose { (latestResult as? PageBitmapResult.Ready)?.bitmap?.recycle() }
+    }
     Box(
         modifier = Modifier.size(width = 62.dp, height = 84.dp).clip(RoundedCornerShape(8.dp)).background(colors.surfaceVariant),
         contentAlignment = Alignment.Center,
